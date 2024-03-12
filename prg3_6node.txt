@@ -1,0 +1,98 @@
+PROGRAM - 4
+
+Module 3-1
+
+Implement transmission of ping messages/trace route over a network topology consisting of 6
+nodes and find the number of packets dropped due to congestion in the network.
+
+
+set ns [new Simulator] ;# Open the simulator
+set f [open 6nodes.tr w] ;# Create the trace file with the name lab1.tr
+$ns trace-all $f
+set nf [open 6nodes.nam w] ;# Create the NAM file with the name lab1.nam
+$ns namtrace-all $nf
+
+# Creating the nodes and storing them in an array
+set n(0) [$ns node]
+set n(1) [$ns node]
+set n(2) [$ns node]
+set n(3) [$ns node]
+set n(4) [$ns node]
+set n(5) [$ns node]
+
+# Connecting the nodes using duplex channels with assigned bandwidth
+$ns duplex-link $n(0) $n(1) 0.01Mb 10ms DropTail
+$ns duplex-link $n(1) $n(2) 0.01Mb 10ms DropTail
+$ns duplex-link $n(2) $n(3) 0.01Mb 10ms DropTail
+$ns duplex-link $n(3) $n(4) 0.01Mb 10ms DropTail
+$ns duplex-link $n(4) $n(5) 0.01Mb 10ms DropTail
+$ns duplex-link $n(0) $n(5) 0.01Mb 10ms DropTail
+
+Agent/Ping instproc recv {from rtt} {
+    $self instvar node_
+    puts "node [$node_ id] received ping answer from $from with round-trip-time $rtt ms."
+}
+
+# Creating ping agents and attaching them to nodes
+for {set i 0} {$i < 6} {incr i} {
+    set p($i) [new Agent/Ping]
+    $ns attach-agent $n($i) $p($i)
+}
+
+# Connecting the ping agents in a ring
+for {set i 0} {$i < 5} {incr i} {
+    $ns connect $p($i) $p([expr {$i+1}])
+}
+$ns connect $p(5) $p(0)
+
+# Looping statement to send ping messages
+for {set i 0} {$i < 50 } {incr i} {
+    for {set j 0} {$j < 6} {incr j} {
+        $ns at [expr {0.2 * $j}] "$p($j) send"
+    }
+}
+
+# Main procedure to finish the simulation
+proc finish {} {
+    global ns f nf
+    $ns flush-trace
+    # Close the trace file
+    close $f
+    close $nf
+    puts "Running nam..."
+    exec nam 6nodes.nam &
+    exit 0
+}
+
+$ns at 1.0 "finish"
+$ns run
+
+
+
+AWK FILE:
+
+
+# AWK code to count the number of lines where the first column is "d"
+BEGIN {
+    count = 0; # Initialize count variable
+}
+
+{
+    if ($1 == "d") {
+        count++; # Increment count for each line where the first column is "d"
+    }
+}
+
+END {
+    printf("The Total no of Packets Dropped due to Congestion: %d\n\n", count);
+}
+
+
+
+
+commands:
+
+gedit 6nodes.tcl
+gedit 6nodes.awk
+ns 6nodes.tcl
+awk -f 6nodes.awk 6nodes.tr

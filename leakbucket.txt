@@ -1,0 +1,81 @@
+//PROGRAM - 7
+
+//Module 4-2
+
+//Write a program for congestion control using leaky bucket algorithm.
+
+import java.util.*;
+class LeakyBucket {
+int n;
+//initial packets in the bucket
+int burst;
+int outgoingRate;
+int bucketSize;
+int incoming;
+int outgoing;
+int pending;
+int overflow;
+int duration;
+int interval;
+LeakyBucket()
+{
+pending = 0;
+incoming = 0;
+overflow = 0;
+outgoing = 0;
+}
+//total no. of packets that can
+// be accommodated in the bucket
+void leakyBucket()
+{
+System.out.println("Time Incoming Pending Overflow Outgoing");
+Random rand = new Random();
+int time=0;
+while (time < duration)
+{
+incoming = rand.nextInt(burst);
+if ((pending + incoming) > bucketSize)
+{
+overflow = (pending + incoming) - bucketSize;
+pending = bucketSize;
+}
+else
+pending += incoming;
+//interval = rand()%10; // Next packet will come at time
+interval = 1;
+for(int clk = 0; clk < interval; ++clk)
+{
+output(time, incoming, pending, overflow, outgoing);
+//sleep(1);
+outgoing = Math.min(outgoingRate, pending);
+pending -= outgoing;
+incoming = 0;
+++time;
+}
+}
+}
+//no. of packets that enters the bucket at a time
+void input()
+{
+Scanner scanner = new Scanner(System.in);
+System.out.println("Enter burst size: ");
+burst = scanner.nextInt();
+System.out.println("Enter bucket size: ");
+bucketSize = scanner.nextInt();
+System.out.println("Enter outgoing rate: ");
+outgoingRate = scanner.nextInt();
+System.out.println("Enter duration: ");
+duration = scanner.nextInt();
+scanner.close();
+}
+//no. of packets that exits the bucket at a time
+void output(int time, int incoming, int pending, int overflow, int outgoing)
+{
+System.out.printf("%d\t%d\t%d\t%d\t%d\n",time,incoming,pending,overflow,outgoing);
+}
+public static void main(String[] args) {
+LeakyBucket lb = new LeakyBucket();
+lb.input();
+lb.leakyBucket();
+}
+}
